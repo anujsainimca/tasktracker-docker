@@ -85,6 +85,23 @@ def create_task():
     return _ok(task.to_dict(), 201)
 
 
+@bp.route("/tasks/search", methods=["GET"])
+def search_tasks():
+    """
+    Search tasks by title keyword.
+
+    Required query parameter:
+      ?q=keyword  — case-insensitive partial match against the task title
+    """
+    keyword = request.args.get("q", "").strip()
+    if not keyword:
+        return _error("Query parameter 'q' is required.", 400)
+
+    keyword_lower = keyword.lower()
+    matches = [t for t in task_store.get_all() if keyword_lower in t.title.lower()]
+    return _ok([t.to_dict() for t in matches])
+
+
 @bp.route("/tasks/<task_id>", methods=["PATCH"])
 def update_task(task_id: str):
     """Partially update a task. Only supplied fields are changed."""
