@@ -1,6 +1,6 @@
 # ---- Build stage ----
 # Use a slim Python image to keep the final image small.
-FROM python:3.12-slim AS base
+FROM python:3.11-slim AS base
 
 # Prevents Python from writing .pyc files and enables unbuffered stdout/stderr
 # so logs appear immediately in Docker/Kubernetes log streams.
