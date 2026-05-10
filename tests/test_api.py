@@ -249,3 +249,60 @@ def test_delete_task_then_get_returns_404(client):
     # After deletion, PATCH should also 404
     resp = client.patch(f"/tasks/{task_id}", json={"title": "Ghost"})
     assert resp.status_code == 404
+
+
+# ------------------------------------------------------------------ #
+# 6. Search tasks                                                      #
+# ------------------------------------------------------------------ #
+
+
+def test_search_missing_q_returns_400(client):
+    resp = client.get("/tasks/search")
+    assert resp.status_code == 400
+    assert "error" in resp.get_json()
+
+
+def test_search_blank_q_returns_400(client):
+    resp = client.get("/tasks/search?q=   ")
+    assert resp.status_code == 400
+
+
+def test_search_returns_matching_tasks(client):
+    post_task(client, title="Fix login bug")
+    post_task(client, title="Add logout feature")
+    post_task(client, title="Update README")
+    data = client.get("/tasks/search?q=log").get_json()
+    titles = {t["title"] for t in data}
+    assert titles == {"Fix login bug", "Add logout feature"}
+
+
+def test_search_is_case_insensitive(client):
+    post_task(client, title="Deploy to Production")
+    data = client.get("/tasks/search?q=production").get_json()
+    assert len(data) == 1
+    assert data[0]["title"] == "Deploy to Production"
+
+
+def test_search_partial_match(client):
+    post_task(client, title="Write unit tests")
+    data = client.get("/tasks/search?q=unit").get_json()
+    assert len(data) == 1
+
+
+def test_search_no_matches_returns_empty_list(client):
+    post_task(client, title="Some task")
+    data = client.get("/tasks/search?q=zzznomatch").get_json()
+    assert data == []
+
+
+def test_search_empty_store_returns_empty_list(client):
+    data = client.get("/tasks/search?q=anything").get_json()
+    assert data == []
+
+
+def test_search_response_shape(client):
+    post_task(client, title="Check response shape")
+    data = client.get("/tasks/search?q=response").get_json()
+    assert len(data) == 1
+    for key in ("id", "title", "description", "status", "priority", "created_at", "updated_at"):
+        assert key in data[0]
