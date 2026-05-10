@@ -1,0 +1,6 @@
+# Runtime
+flask==3.0.3
+
+# Testing
+pytest==8.2.0
+pytest-flask==1.3.0
